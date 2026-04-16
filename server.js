@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -11,18 +10,18 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // နောက်ပိုင်း Frontend URL အတိအကျ ထည့်ပါမယ်
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// Online Users List (အရိုးရှင်းဆုံးပုံစံ)
+// Online Users List (userId -> socketId)
 let onlineUsers = [];
 
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // User Setup (User ID နဲ့ Socket ID ချိတ်ဆက်ခြင်း)
+  // User Setup
   socket.on('setup', (userId) => {
     socket.join(userId);
     if (!onlineUsers.some(user => user.userId === userId)) {

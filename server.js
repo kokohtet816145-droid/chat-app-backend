@@ -15,53 +15,39 @@ const io = new Server(server, {
   }
 });
 
-// Online Users List (userId -> socketId)
 let onlineUsers = [];
 
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // 1. User Setup (When user opens app)
   socket.on('setup', (userId) => {
     socket.join(userId);
     if (!onlineUsers.some(user => user.userId === userId)) {
       onlineUsers.push({ userId, socketId: socket.id });
     }
     io.emit('get online users', onlineUsers);
-    console.log('Online users:', onlineUsers);
   });
 
-  // 2. Join Chat Room
   socket.on('join chat', (roomId) => {
     socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
   });
 
-  // 3. New Message
   socket.on('new message', (newMessage) => {
     const chat = newMessage.chat;
     if (!chat.users) return;
-
     chat.users.forEach(user => {
       if (user._id === newMessage.sender._id) return;
       socket.to(user._id).emit('message received', newMessage);
     });
   });
 
-  // 4. Delete Message
-  socket.on('delete message', (messageId) => {
-    socket.to(messageId).emit('message deleted', messageId);
-  });
-
-  // 5. Typing Indicator
+  // Typing Indicator
   socket.on('typing', (room) => socket.to(room).emit('typing', room));
   socket.on('stop typing', (room) => socket.to(room).emit('stop typing', room));
 
-  // 6. Disconnect
   socket.on('disconnect', () => {
     onlineUsers = onlineUsers.filter(user => user.socketId !== socket.id);
     io.emit('get online users', onlineUsers);
-    console.log(`User disconnected: ${socket.id}`);
   });
 });
 

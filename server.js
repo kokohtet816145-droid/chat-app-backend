@@ -1,3 +1,5 @@
+cd ~/chat-app/backend
+cat > server.js << 'EOF'
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -21,7 +23,7 @@ let onlineUsers = [];
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // User Setup
+  // 1. User Setup (When user opens app)
   socket.on('setup', (userId) => {
     socket.join(userId);
     if (!onlineUsers.some(user => user.userId === userId)) {
@@ -31,13 +33,13 @@ io.on('connection', (socket) => {
     console.log('Online users:', onlineUsers);
   });
 
-  // Join Chat Room
+  // 2. Join Chat Room
   socket.on('join chat', (roomId) => {
     socket.join(roomId);
     console.log(`User joined room: ${roomId}`);
   });
 
-  // New Message
+  // 3. New Message
   socket.on('new message', (newMessage) => {
     const chat = newMessage.chat;
     if (!chat.users) return;
@@ -48,11 +50,11 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Typing Indicator
+  // 4. Typing Indicator
   socket.on('typing', (room) => socket.to(room).emit('typing', room));
   socket.on('stop typing', (room) => socket.to(room).emit('stop typing', room));
 
-  // Disconnect
+  // 5. Disconnect
   socket.on('disconnect', () => {
     onlineUsers = onlineUsers.filter(user => user.socketId !== socket.id);
     io.emit('get online users', onlineUsers);
@@ -64,3 +66,5 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+EOF
+
